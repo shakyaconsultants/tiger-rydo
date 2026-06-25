@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#1C1C1E"/>
+  <path d="M120 420 L280 300 L420 360 L620 240 L760 300" stroke="#FF5500" stroke-width="8" fill="none"/>
+  <circle cx="620" cy="380" r="70" stroke="#FF5500" stroke-width="10" fill="none"/>
+  <text x="80" y="120" fill="#F5F5F7" font-family="Arial" font-size="42" font-weight="700">TIGER E1</text>
+</svg>

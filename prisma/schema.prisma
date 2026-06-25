@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  DEALER
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  TEXTAREA
+  RICH_TEXT
+  SELECT
+  IMAGE
+  VIDEO
+  BOOLEAN
+  URL
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  role         Role
+  active       Boolean       @default(true)
+  phone        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orders       DealerOrder[]
+}
+
+model SiteSettings {
+  id                    String   @id @default("default")
+  siteName              String   @default("TIGER RYDO")
+  tagline               String   @default("RIDE BOLD. RIDE CLEAN. RIDE FUTURE.")
+  logoUrl               String   @default("/brand/logo.svg")
+  faviconUrl            String   @default("/brand/icon.svg")
+  phone                 String   @default("9453605312")
+  customerWhatsapp      String   @default("9453605312")
+  dealershipWhatsapp    String   @default("9453605312")
+  customerWhatsappMsg   String   @default("Hi, I would like to know more about TIGER RYDO products.")
+  dealershipWhatsappMsg String   @default("Hi, I am interested in becoming a TIGER RYDO dealer.")
+  address               String?
+  footerText            String?
+  socialLinks           String?
+  updatedAt             DateTime @updatedAt
+}
+
+model PageSection {
+  id        String   @id @default(cuid())
+  page      String
+  key       String
+  title     String?
+  content   String
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([page, key])
+}
+
+model HeroBanner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  ctaText   String?
+  ctaLink   String?
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  quote     String
+  imageUrl  String?
+  rating    Int      @default(5)
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model ProductType {
+  id          String                @id @default(cuid())
+  name        String
+  slug        String                @unique
+  description String?
+  sortOrder   Int                   @default(0)
+  parameters  ParameterDefinition[]
+  products    Product[]
+  createdAt   DateTime              @default(now())
+}
+
+model ParameterDefinition {
+  id            String           @id @default(cuid())
+  productTypeId String
+  productType   ProductType      @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  name          String
+  slug          String
+  fieldType     FieldType
+  required      Boolean          @default(false)
+  options       String?
+  sortOrder     Int              @default(0)
+  values        ParameterValue[]
+
+  @@unique([productTypeId, slug])
+}
+
+model Product {
+  id              String           @id @default(cuid())
+  productTypeId   String
+  productType     ProductType      @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String           @unique
+  published       Boolean          @default(false)
+  featured        Boolean          @default(false)
+  metaTitle       String?
+  metaDescription String?
+  sortOrder       Int              @default(0)
+  values          ParameterValue[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model ParameterValue {
+  id          String              @id @default(cuid())
+  productId   String
+  product     Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  parameterId String
+  parameter   ParameterDefinition @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+  value       String
+
+  @@unique([productId, parameterId])
+}
+
+model FormTemplate {
+  id        String                @id @default(cuid())
+  name      String                @default("Dealer Order Form")
+  active    Boolean               @default(true)
+  fields    FormFieldDefinition[]
+  orders    DealerOrder[]
+  updatedAt DateTime              @updatedAt
+}
+
+model FormFieldDefinition {
+  id             String       @id @default(cuid())
+  formTemplateId String
+  formTemplate   FormTemplate @relation(fields: [formTemplateId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  fieldType      FieldType
+  required       Boolean      @default(false)
+  options        String?
+  sortOrder      Int          @default(0)
+
+  @@unique([formTemplateId, slug])
+}
+
+model DealerOrder {
+  id             String       @id @default(cuid())
+  orderNumber    String       @unique
+  dealerId       String
+  dealer         User         @relation(fields: [dealerId], references: [id])
+  formTemplateId String
+  formTemplate   FormTemplate @relation(fields: [formTemplateId], references: [id])
+  formData       String
+  status         OrderStatus  @default(PENDING)
+  adminNotes     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}

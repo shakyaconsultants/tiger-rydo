@@ -96,11 +96,31 @@ export async function saveProduct(formData: FormData) {
       });
 
   const params = await prisma.parameterDefinition.findMany({ where: { productTypeId } });
+  const existingValues = id
+    ? await prisma.parameterValue.findMany({ where: { productId: product.id } })
+    : [];
+
   for (const p of params) {
+    const file = formData.get(p.slug);
+    if (file instanceof File && file.size > 0) {
+      const value = await saveUpload(file);
+      await prisma.parameterValue.upsert({
+        where: { productId_parameterId: { productId: product.id, parameterId: p.id } },
+        update: { value },
+        create: { productId: product.id, parameterId: p.id, value },
+      });
+      continue;
+    }
+
+    if (p.fieldType === "IMAGE" || p.fieldType === "VIDEO") {
+      const existing = existingValues.find((v) => v.parameterId === p.id)?.value;
+      if (existing) continue;
+    }
+
     const raw = formData.get(p.slug);
-    let value = raw == null ? "" : String(raw);
-    const file = formData.get(`${p.slug}_file`);
-    if (file instanceof File && file.size > 0) value = await saveUpload(file);
+    const value = raw == null ? "" : String(raw);
+    if (value === "[object File]") continue;
+
     await prisma.parameterValue.upsert({
       where: { productId_parameterId: { productId: product.id, parameterId: p.id } },
       update: { value },
@@ -109,6 +129,8 @@ export async function saveProduct(formData: FormData) {
   }
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath(`/products/${slug}`);
   redirect("/admin/products");
 }
 

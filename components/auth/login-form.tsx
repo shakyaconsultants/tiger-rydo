@@ -1,13 +1,28 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { getSession, signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+function redirectAfterLogin(callback: string | null, role?: string) {
+  if (callback) {
+    window.location.href = callback;
+    return;
+  }
+  if (role === "ADMIN") {
+    window.location.href = "/admin";
+    return;
+  }
+  if (role === "DEALER") {
+    window.location.href = "/dealer";
+    return;
+  }
+  window.location.href = "/";
+}
+
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,14 +37,16 @@ export function LoginForm() {
       password: fd.get("password"),
       redirect: false,
     });
-    setLoading(false);
     if (res?.error) {
+      setLoading(false);
       setError("Invalid email or password");
       return;
     }
+
     const callback = params.get("callbackUrl");
-    router.push(callback || "/");
-    router.refresh();
+    const session = await getSession();
+    setLoading(false);
+    redirectAfterLogin(callback, session?.user?.role);
   }
 
   return (

@@ -22,7 +22,7 @@ export function Header({ siteName, logoUrl }: { siteName: string; logoUrl: strin
             </Link>
           ))}
         </nav>
-        <Link href="/login" className="text-sm font-medium text-brand-accent">Dealer Login</Link>
+        <Link href="/login?callbackUrl=/dealer" className="text-sm font-medium text-brand-accent">Dealer Login</Link>
       </div>
     </header>
   );

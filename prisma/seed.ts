@@ -1,22 +1,9 @@
 import "dotenv/config";
-import { PrismaClient } from "../app/generated/prisma/client";
+import { PrismaClient } from "../app/generated/prisma";
 import bcrypt from "bcryptjs";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { getDatabaseUrl, isTursoDatabase } from "../lib/database";
 
-function createPrismaClient() {
-  const url = getDatabaseUrl();
-  if (isTursoDatabase(url)) {
-    const authToken = process.env.TURSO_AUTH_TOKEN;
-    if (!authToken) throw new Error("TURSO_AUTH_TOKEN is required for Turso seeding.");
-    return new PrismaClient({ adapter: new PrismaLibSql({ url, authToken }) });
-  }
-  return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url }) });
-}
 
-const prisma = createPrismaClient();
-
+const prisma = new PrismaClient();
 const SCOOTY_SHOWCASE_VIDEO = "https://assets.mixkit.co/videos/15807/15807-720.mp4";
 
 async function seedProductValues(

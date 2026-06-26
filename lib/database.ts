@@ -1,7 +1,5 @@
 export function getDatabaseUrl() {
-  return process.env.DATABASE_URL || "file:./dev.db";
-}
-
-export function isTursoDatabase(url = getDatabaseUrl()) {
-  return url.startsWith("libsql:") || (url.startsWith("https://") && url.includes(".turso."));
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is required.");
+  return url;
 }
